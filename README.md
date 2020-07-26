@@ -26,6 +26,7 @@ The primary difference between PPPMD (1) and PPPMD2 is the inclusion of the nlie
 3. ```unwrap_coords```: Allows you to convert wrapped coordinates (x, y, z), image flags (ix, iy, iz), & box bounds --> unwrapped coordinates (xu, yu, zu).
 
 4. ```wrap_coords```: Converts unwrapped coordinates (xu, yu, zu) & box bounds --> Wrapped coordinates (x, y, z) & image flags
+
     a. Requires function ```get_box_len```
 
 5. ```scale_coords```: Converts wrapped coordinates (x, y, z) & box bounds --> wrapped and scaled coordinates (xs, ys, zs, ix, iy, iz)
@@ -33,9 +34,11 @@ The primary difference between PPPMD (1) and PPPMD2 is the inclusion of the nlie
 6. ```scale_unwrapped_coords```: Converts unwrapped coords (xu, yu, zu) & box bounds --> unwrapped and scaled coordinates (xsu, ysu, zsu)
 
 7. ```correct4_center_mass```: Resets center of mass in all frames to that of frame 0. Function accepts only unwrapped coordinates.
+    
     *Must use with ```unwrap_coords``` and ```wrap_coords``` if you start with wrapped coordinates.*
 
 8. ```write_lammpstrj```: Function which accepts any of the below listed forms of coordinates and "coordinate_type" and writes a file in the default style of lammps trajectory/dump files.
+
     a. wrapped (x, y, z, ix, iy, iz)  ```coordinate_type = x```
 
     b. unwrapped (xu, yu, zu)  ```coordinates_type = xu```
