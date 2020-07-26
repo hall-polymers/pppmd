@@ -4,13 +4,17 @@ Private copy of pppmd2 - a package focused on post-processing of MD polymer simu
 # Initial release of PPPMD2 (v0.0.0)
 **Post-Processing Polymer Molecular Dynamics**: Suite of tools to do post-processing calculations relevant to polymers.
 The primary difference between PPPMD (1) and PPPMD2 is the inclusion of the nliesen subpackage, which includes "dump_tools.py". This package adds the following functionality to the package...
+
 **Release Date: 7/26/20**
+
 *The original PPPMD package is included as a subpackage under ```jbrown/pppmd```*
+
 # Initial
 ## nliesen/dump_tools.py
 1. ```read_lammpstrj_plus```: Allows you to read in both wrapped and unwrapped coordinates from a lammps trajectory file
 
 2. ```mini_read_lammpstrj```: Allows you to resume reading a lammps trajectory file from where you left off, without rebuilding lists such as id2type, id2mol, and mol2ids, which take a lot of time. This functionality is added with the f.seek() and f.tell() functions and enables reading in only a subset of the total frames quickly. This can be beneficial for memory usage in your program and was developed to go with a trajectory averaging script I was writing.
+
 *Functions (1) and (2) can accept the below coordinate styles*
 
     a. wrapped (x, y, z, ix, iy, iz)  ```coordinate_type = x```
