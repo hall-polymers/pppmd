@@ -3,7 +3,7 @@ Private copy of pppmd2 - a package focused on post-processing of MD polymer simu
 
 # Initial release of PPPMD2 (v0.0.0)
 **Post-Processing Polymer Molecular Dynamics**: Suite of tools to do post-processing calculations relevant to polymers.
-The primary difference between PPPMD (1) and PPPMD2 is the inclusion of the nliesen subpackage, which includes "dump_tools.py". This package adds the following functionality to the package...
+The primary difference between PPPMD (1) and PPPMD2 is the inclusion of the nliesen subpackage, which includes "dump_tools.py". This package adds the following functionality...
 
 **Release Date: 7/26/20**
 
