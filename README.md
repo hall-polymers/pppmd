@@ -12,12 +12,12 @@ The primary difference between PPPMD (1) and PPPMD2 is the inclusion of the nlie
 
 2. ```mini_read_lammpstrj```: Allows you to resume reading a lammps trajectory file from where you left off, without rebuilding lists such as id2type, id2mol, and mol2ids, which take a lot of time. This functionality is added with the f.seek() and f.tell() functions and enables reading in only a subset of the total frames quickly. This can be beneficial for memory usage in your program and was developed to go with a trajectory averaging script I was writing.
 *Functions (1) and (2) can accept the below coordinate styles*
+
     a. wrapped (x, y, z, ix, iy, iz)  ```coordinate_type = x```
 
     b. unwrapped (xu, yu, zu)  ```coordinates_type = xu```
 
     c. scaled and wrapped (xs, ys, zs, ix, iy, iz)  ```coordinate_type = xs```
-
 3. ```unwrap_coords```: Allows you to convert wrapped coordinates (x, y, z), image flags (ix, iy, iz), & box bounds --> unwrapped coordinates (xu, yu, zu).
 
 4. ```wrap_coords```: Converts unwrapped coordinates (xu, yu, zu) & box bounds --> Wrapped coordinates (x, y, z) & image flags
