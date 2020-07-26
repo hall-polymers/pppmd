@@ -36,12 +36,19 @@ The primary difference between PPPMD (1) and PPPMD2 is the inclusion of the nlie
 
 ### Basic arrays/lists and syntax
 All functions follow the procedural coding style of pppmd and work with the same kind of numpy arrays and lists present in the original code. These arrays and lists reproduced below for the sake of clarity, although detailed descriptions can be found in the code as docstrings and comments.
+
 Position: ```r[frame, atomID, dimension]```  -- contains coordinates (3D numpy array)
+
 Image flags: ```ir[frame, atomID, dimension]``` -- contains periodic image flags as integers  (3D numpy array) or None if unwrapped and ```flags_when_unwrap=False```
+
 Box dimensions: ```box_bounds[frame, dimension, low(0)/high(1)]``` -- contains low/high x, y, and z bounds  (3D numpy array)
+
 Atom types: ```id2type[atomID]``` -- corresponding integer-valued atom type for each atomID  (1D numpy array)
+
 AtomID-->molID: ```id2mol[atomID]``` -- molecule/moleculeID for chain atom/atomID belongs to  (1D numpy array)
+
 Frame-->Timestep: ```timestep[frame]``` -- contains timestep of frame (1D numpy array)
+
 MolD-->atomIDs```mol2ids``` -- List whose entries are numpy arrays containing all atomIDs for a selected molID. The list is indexed by molID. (list of 1D np arrays)
 
 #### jbrown/pppmd
