@@ -11,9 +11,13 @@ The primary difference between PPPMD (1) and PPPMD2 is the inclusion of the nlie
 1. ```read_lammpstrj_plus```: Allows you to read in both wrapped and unwrapped coordinates from a lammps trajectory file
 
 2. ```mini_read_lammpstrj```: Allows you to resume reading a lammps trajectory file from where you left off, without rebuilding lists such as id2type, id2mol, and mol2ids, which take a lot of time. This functionality is added with the f.seek() and f.tell() functions and enables reading in only a subset of the total frames quickly. This can be beneficial for memory usage in your program and was developed to go with a trajectory averaging script I was writing.
+
 *Functions (1) and (2) can accept the below coordinate styles*
+
     a. wrapped (x, y, z, ix, iy, iz)  ```coordinate_type = x```
+
     b. unwrapped (xu, yu, zu)  ```coordinates_type = xu```
+
     c. scaled and wrapped (xs, ys, zs, ix, iy, iz)  ```coordinate_type = xs```
 
 3. ```unwrap_coords```: Allows you to convert wrapped coordinates (x, y, z), image flags (ix, iy, iz), & box bounds --> unwrapped coordinates (xu, yu, zu).
@@ -29,9 +33,13 @@ The primary difference between PPPMD (1) and PPPMD2 is the inclusion of the nlie
     *Must use with ```unwrap_coords``` and ```wrap_coords``` if you start with wrapped coordinates.*
 
 8. ```write_lammpstrj```: Function which accepts any of the below listed forms of coordinates and "coordinate_type" and writes a file in the default style of lammps trajectory/dump files.
+
     a. wrapped (x, y, z, ix, iy, iz)  ```coordinate_type = x```
+
     b. unwrapped (xu, yu, zu)  ```coordinates_type = xu```
+
     c. scaled and wrapped (xs, ys, zs, ix, iy, iz)  ```coordinate_type = xs```
+
     d. scaled and unwrapped (xsu, ysu, zsu)  ```coordinate_type = xsu```
 
 ### Basic arrays/lists and syntax
@@ -56,8 +64,11 @@ MolD-->atomIDs```mol2ids``` -- List whose entries are numpy arrays containing al
 1. ```read_lammpstrj```: Allows you to read in only wrapped coordinates (scaled or unscaled) from a lammps trajectory file.
 
 2. ```MSD```: Calculates the mean square displacement for each bead type using the wrapped coordinates, image flags, box bounds, and atom types. Output is a dictionary of numpy arrays, where the numpy arrays are indexed by frame.
+
     *does NOT do any sort of block averaging*
+
     *assumes mass = 1 for all beads*
+
     *does not account for changes in box size*
 
 3. ```gofr```: Computes radial distribution function using the unscaled, but wrapped coordinates (```r```), the box bounds (```box_bounds```), and chosen
@@ -66,22 +77,34 @@ bin size (```bin_size```) in unscaled units of distance.
      *does not distinguish between atoms on the same molecule and other atoms*
 
 4. ```Sofk```: Uses unscaled coordinates, box bounds, and number of bins to directly calculate sofk and the partial structure factors between all pairs of atom types, rather than using a fourier transform of h(r)=g(r)-1. 
+
      *does not account for changes in box size*
+
      *does not distinguish between atoms on the same molecule and other atoms*
 
 5. ```end2end_autocorr```: Converts unscaled (but wrapped) coords, image flags, box bounds, and the list ```mol2ids```, which contains the atomIDs belonging to each molecule (the list is indexed by molID), to an end to end autocorrelation (ACF) function. The outputted ACF is a 1D array indexed by frame count. 
+
     *all the listings in mol2ids will be used and averaged together*
+
     *it is assumed that the end-to-end vector is the one between the lowest and highest id in each molecule (if this is not the case, you'd have to mess with mol2ids, e.g. make it only contain the ids of the two end beads)*
+
     *scaled by the average end-to-end vector at frame 0, so that e2e_autocorr[0]=1.0*
 
 ##### Note on semantics for versioning:
 Much of our code will rely on these scripts. To avoid breaking code (i.e. have backwards compatible code) I suggest we follow the scheme outlined below when releasing code (from my perspective this is code that we will be using in our other scripts). For the procedural coding style that this group seems to like, I suggest the following guidelines.
 
 **Version schematics: MAJOR.MINOR.PATCH**
+
     **MAJOR version**: Functions no longer return the expected objects/variables in the ways that our code relied on
+
          *e.g. ```read_lammpstrj_plus``` no longer accepts returns objects in the expected order which breaks backwards compatibility*
+
     **MINOR version**: when you add functionality in a backwards compatible manner, and
+
         *e.g. when you add a function or a subpackage, without affecting how other functions accept or return objects, or when extend the functionality without breaking how it accepts/returns objects.*
+
     **PATCH version**: when you make backwards compatible bug fixes.
+
         *e.g. fixing a bug in the code without affecting how functions accept/return things.
+
 For more details see [this page](https://semver.org/).
