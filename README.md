@@ -91,7 +91,7 @@ bin size (```bin_size```) in unscaled units of distance.
     *scaled by the average end-to-end vector at frame 0, so that e2e_autocorr[0]=1.0*
 
 ##### Note on semantics for versioning:
-Much of our code will rely on these scripts. To avoid breaking code (i.e. have backwards compatible code) I suggest we follow the scheme outlined below when releasing code (from my perspective this is code that we will be using in our other scripts). For the procedural coding style that this group seems to like, I suggest the following guidelines.
+Much of our code will rely on these scripts. To avoid breaking code (i.e. have backwards compatible code) I we might follow the scheme outlined below to keep track of our code as it changes. 
 
 **Version schematics: MAJOR.MINOR.PATCH**
 
