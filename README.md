@@ -1,5 +1,5 @@
-# p<sup>3</sup>md2
-Private copy of pppmd2 - a package focused on post-processing of MD polymer simulations. Originated in Hall research group at OSU.
+# This is the p<sup>3</sup>md2 development branch
+Development copy of pppmd2 - a package focused on post-processing of MD polymer simulations. Originated in Hall research group at OSU.
 
 # Initial release of PPPMD2 (v0.1.0)
 **Post-Processing Polymer Molecular Dynamics**: Suite of tools to do post-processing calculations relevant to polymers.
