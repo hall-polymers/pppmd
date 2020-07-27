@@ -98,7 +98,7 @@ bin size (```bin_size```) in unscaled units of distance.
 ##### Note on semantics for versioning:
 Much of our code will rely on these scripts. To avoid breaking code (i.e. have backwards compatible code) I will follow the scheme outlined below when adding "releases" to keep track of our code as it changes. 
 
-**Version schematics: MAJOR.MINOR.PATCH**
+**Version semantics: MAJOR.MINOR.PATCH**
 
     **MAJOR version**: Functions no longer return the expected objects/variables in the ways that our code relied on
 
