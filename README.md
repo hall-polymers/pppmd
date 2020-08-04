@@ -6,7 +6,7 @@ Development copy of pppmd2 - a package focused on post-processing of MD polymer 
 - [Functions](#jbrown)
     - [Usage of jbrown/pppmd functions](#jbrown)
     - [Usage of nliesen/dump_tools functions](#nliesen)
-    - [Usage of kshen/ion-dynamics functions](#kshen)
+    - [Usage of kshen/ion_dynamics functions](#kshen)
 - [Release description](#release) 
    
 ## Basic arrays/lists and syntax <a name="basic"/>
@@ -88,7 +88,7 @@ bin size (```bin_size```) in unscaled units of distance.
 
     d. scaled and unwrapped (xsu, ysu, zsu)  ```coordinate_type = xsu```
 
-## Usage of kshen/ion-dynamics functions <a name="kshen"/>
+## Usage of kshen/ion_dynamics functions <a name="kshen"/>
 This sub-package includes python analysis scripts for ion-containing systems, including ion pairing/clustering and ion conductivity analyses.
 
 **General block averaging syntax used in these functions:**
@@ -107,6 +107,7 @@ The following schematic is an example of ```nBlock=3``` that uses all the time f
 ```
 
 *Detailed explanation of usage of kshen/ion-dynamics is coming.*
+*Example usages of kshen/ion-dynamics functions are available in [kshen/ion-dynamics/example](https://github.com/hall-polymers/pppmd2/tree/development/kshen).*
 
 ## Release description <a name="release"/>
 
