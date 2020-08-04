@@ -1,7 +1,7 @@
 # P<sup>3</sup>MD2 development
 Development copy of pppmd2 - a package focused on post-processing of MD polymer simulations. Originated in Hall research group at OSU.
 
-### Table of Contents  
+## Table of Contents
 - [Basic arrays/lists and syntax of the package](#basic)
 - [Functions](#functions)
     - [Usage of jbrown/pppmd functions](#jbrown)
@@ -9,8 +9,7 @@ Development copy of pppmd2 - a package focused on post-processing of MD polymer 
     - [Usage of kshen/ion-dynamics functions](#kshen)
 - [Release description](#release) 
    
-<a name="basic"/>
-## Basic arrays/lists and syntax
+## Basic arrays/lists and syntax <a name="basic"/>
 All functions follow the procedural coding style of pppmd and work with the same kind of numpy arrays and lists present in the original code. These arrays and lists reproduced below for the sake of clarity, although detailed descriptions can be found in the code as docstrings and comments.
 
 Position: ```r[frame, atomID, dimension]```  -- contains coordinates (3D numpy array)
@@ -27,11 +26,9 @@ Frame-->Timestep: ```timestep[frame]``` -- contains timestep of frame (1D numpy 
 
 MolD-->atomIDs```mol2ids``` -- List whose entries are numpy arrays containing all atomIDs for a selected molID. The list is indexed by molID. (list of 1D np arrays)
 
-<a name="functions"/>
-## Functions
+## Functions <a name="functions"/>
 
-<a name="jbrown"/>
-### Usage of jbrown/pppmd functions
+### Usage of jbrown/pppmd functions <a name="jbrown"/>
 1. ```read_lammpstrj```: Allows you to read in only wrapped coordinates (scaled or unscaled) from a lammps trajectory file.
 
 2. ```MSD```: Calculates the mean square displacement for each bead type using the wrapped coordinates, image flags, box bounds, and atom types. Output is a dictionary of numpy arrays, where the numpy arrays are indexed by frame.
@@ -61,8 +58,7 @@ bin size (```bin_size```) in unscaled units of distance.
 
     *scaled by the average end-to-end vector at frame 0, so that e2e_autocorr[0]=1.0*
 
-<a name="nliesen"/>
-### Usage of nliesen/dump_tools functions
+### Usage of nliesen/dump_tools functions <a name="nliesen"/>
 1. ```read_lammpstrj_plus```: Allows you to read in both wrapped and unwrapped coordinates from a lammps trajectory file
 
 2. ```mini_read_lammpstrj```: Allows you to resume reading a lammps trajectory file from where you left off, without rebuilding lists such as id2type, id2mol, and mol2ids, which take a lot of time. This functionality is added with the f.seek() and f.tell() functions and enables reading in only a subset of the total frames quickly. This can be beneficial for memory usage in your program and was developed to go with a trajectory averaging script I was writing.
@@ -99,8 +95,7 @@ bin size (```bin_size```) in unscaled units of distance.
 
     d. scaled and unwrapped (xsu, ysu, zsu)  ```coordinate_type = xsu```
 
-<a name="kshen"/>
-### Usage of kshen/ion-dynamics functions
+### Usage of kshen/ion-dynamics functions <a name="kshen"/>
 This sub-package includes python analysis scripts for ion-containing systems, including ion pairing/clustering and ion conductivity analyses.
 
 **General block averaging syntax used in these functions:**
@@ -118,11 +113,9 @@ The following schematic is an example of ```nBlock=3``` that uses all the time f
 
 ```
 
-#### Detailed explanation of usage of kshen/ion-dynamics is coming.
+*Detailed explanation of usage of kshen/ion-dynamics is coming.*
 
-
-<a name="release"/>
-## Release description
+## Release description <a name="release"/>
 
 ### Initial release of PPPMD2 (v0.1.0)
 **Post-Processing Polymer Molecular Dynamics**: Suite of tools to do post-processing calculations relevant to polymers.
