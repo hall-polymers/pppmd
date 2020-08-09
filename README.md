@@ -2,14 +2,14 @@
 Development copy of pppmd2 - a package focused on post-processing of MD polymer simulations. Originated in Hall research group at OSU.
 
 ## Table of Contents
-- [Basic arrays/lists and syntax of the package](#basic)
-- [Usage of functions](#usage)
+- [Basic Arrays/Lists and Syntax](#basic)
+- [Usage of Functions](#usage)
     - [jbrown/pppmd](https://github.com/hall-polymers/pppmd2/tree/development/jbrown)
     - [nliesen/dump_tools](https://github.com/hall-polymers/pppmd2/tree/development/nliesen)
     - [kshen/ion_dynamics](https://github.com/hall-polymers/pppmd2/tree/development/kshen)
-- [Release description](#release) 
+- [Release Descriptions](#release) 
    
-## Basic arrays/lists and syntax <a name="basic"/>
+## Basic Arrays/Lists and Syntax <a name="basic"/>
 All functions follow the procedural coding style of pppmd and work with the same kind of numpy arrays and lists present in the original code. These arrays and lists reproduced below for the sake of clarity, although detailed descriptions can be found in the code as docstrings and comments.
 
 - Position: ```r[frame, atomID, dimension]```  -- contains coordinates (3D numpy array)
@@ -21,13 +21,13 @@ All functions follow the procedural coding style of pppmd and work with the same
 - MolD-->atomIDs```mol2ids``` -- List whose entries are numpy arrays containing all atomIDs for a selected molID. The list is indexed by molID. (list of 1D np arrays)
 
 
-## Usage of functions <a name="usage"/>
-We include all the details of the functions in the subfolders including:
-- [jbrown/pppmd](https://github.com/hall-polymers/pppmd2/tree/development/jbrown)
-- [nliesen/dump_tools](https://github.com/hall-polymers/pppmd2/tree/development/nliesen)
-- [kshen/ion_dynamics](https://github.com/hall-polymers/pppmd2/tree/development/kshen)
+## Usage of Functions <a name="usage"/>
+We describe all the details of the functions in the subfolders:
+- [jbrown/pppmd](https://github.com/hall-polymers/pppmd2/tree/development/jbrown) -- Original PPPMD package that includes basic functions to read in LAMMPS trajectory files, calculate particle mean square displacement, radial distribution function, structure factor, and end-to-end autocorrelation function.
+- [nliesen/dump_tools](https://github.com/hall-polymers/pppmd2/tree/development/nliesen) -- Advanced PPPMD package that allows 1) read in both wrapped and unwrapped coordinates from a lammps trajectory file and 2) resume reading a lammps trajectory file from where you left off.
+- [kshen/ion_dynamics](https://github.com/hall-polymers/pppmd2/tree/development/kshen) -- PPPMD Ion Dynamics Package that includes functions to analyze ion pairing/clustering and calculate ion conductivity.
 
-## Release description <a name="release"/>
+## Release Descriptions <a name="release"/>
 
 ### Initial release of PPPMD2 (v0.1.0)
 **Post-Processing Polymer Molecular Dynamics**: Suite of tools to do post-processing calculations relevant to polymers.
