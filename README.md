@@ -3,10 +3,10 @@ Development copy of pppmd2 - a package focused on post-processing of MD polymer 
 
 ## Table of Contents
 - [Basic arrays/lists and syntax of the package](#basic)
-- [Functions](#jbrown)
-    - [Usage of jbrown/pppmd functions](#jbrown)
-    - [Usage of nliesen/dump_tools functions](#nliesen)
-    - [Usage of kshen/ion_dynamics functions](#kshen)
+- [Usage of functions](#usage)
+    - [jbrown/pppmd](https://github.com/hall-polymers/pppmd2/tree/development/jbrown)
+    - [nliesen/dump_tools](https://github.com/hall-polymers/pppmd2/tree/development/nliesen)
+    - [kshen/ion_dynamics](https://github.com/hall-polymers/pppmd2/tree/development/kshen)
 - [Release description](#release) 
    
 ## Basic arrays/lists and syntax <a name="basic"/>
@@ -21,93 +21,11 @@ All functions follow the procedural coding style of pppmd and work with the same
 - MolD-->atomIDs```mol2ids``` -- List whose entries are numpy arrays containing all atomIDs for a selected molID. The list is indexed by molID. (list of 1D np arrays)
 
 
-## Usage of jbrown/pppmd functions <a name="jbrown"/>
-1. ```read_lammpstrj```: Allows you to read in only wrapped coordinates (scaled or unscaled) from a lammps trajectory file.
-
-2. ```MSD```: Calculates the mean square displacement for each bead type using the wrapped coordinates, image flags, box bounds, and atom types. Output is a dictionary of numpy arrays, where the numpy arrays are indexed by frame.
-
-    *does NOT do any sort of block averaging*
-
-    *assumes mass = 1 for all beads*
-
-    *does not account for changes in box size*
-
-3. ```gofr```: Computes radial distribution function using the unscaled, but wrapped coordinates (```r```), the box bounds (```box_bounds```), and chosen
-bin size (```bin_size```) in unscaled units of distance.
-     *does not account for changes in box size*
-     *does not distinguish between atoms on the same molecule and other atoms*
-
-4. ```Sofk```: Uses unscaled coordinates, box bounds, and number of bins to directly calculate sofk and the partial structure factors between all pairs of atom types, rather than using a fourier transform of h(r)=g(r)-1. 
-
-     *does not account for changes in box size*
-
-     *does not distinguish between atoms on the same molecule and other atoms*
-
-5. ```end2end_autocorr```: Converts unscaled (but wrapped) coords, image flags, box bounds, and the list ```mol2ids```, which contains the atomIDs belonging to each molecule (the list is indexed by molID), to an end to end autocorrelation (ACF) function. The outputted ACF is a 1D array indexed by frame count. 
-
-    *all the listings in mol2ids will be used and averaged together*
-
-    *it is assumed that the end-to-end vector is the one between the lowest and highest id in each molecule (if this is not the case, you'd have to mess with mol2ids, e.g. make it only contain the ids of the two end beads)*
-
-    *scaled by the average end-to-end vector at frame 0, so that e2e_autocorr[0]=1.0*
-
-## Usage of nliesen/dump_tools functions <a name="nliesen"/>
-1. ```read_lammpstrj_plus```: Allows you to read in both wrapped and unwrapped coordinates from a lammps trajectory file
-
-2. ```mini_read_lammpstrj```: Allows you to resume reading a lammps trajectory file from where you left off, without rebuilding lists such as id2type, id2mol, and mol2ids, which take a lot of time. This functionality is added with the f.seek() and f.tell() functions and enables reading in only a subset of the total frames quickly. This can be beneficial for memory usage in your program and was developed to go with a trajectory averaging script I was writing.
-
-*Functions (1) and (2) can accept the below coordinate styles*
-    
-   a. wrapped (x, y, z, ix, iy, iz)  ```coordinate_type = x```
-    
-   b. unwrapped (xu, yu, zu)  ```coordinates_type = xu```
-    
-   c. scaled and wrapped (xs, ys, zs, ix, iy, iz)  ```coordinate_type = xs```
-
-3. ```unwrap_coords```: Allows you to convert wrapped coordinates (x, y, z), image flags (ix, iy, iz), & box bounds --> unwrapped coordinates (xu, yu, zu).
-
-4. ```wrap_coords```: Converts unwrapped coordinates (xu, yu, zu) & box bounds --> Wrapped coordinates (x, y, z) & image flags
-
-    a. Requires function ```get_box_len```
-
-5. ```scale_coords```: Converts wrapped coordinates (x, y, z) & box bounds --> wrapped and scaled coordinates (xs, ys, zs, ix, iy, iz)
-
-6. ```scale_unwrapped_coords```: Converts unwrapped coords (xu, yu, zu) & box bounds --> unwrapped and scaled coordinates (xsu, ysu, zsu)
-
-7. ```correct4_center_mass```: Resets center of mass in all frames to that of frame 0. Function accepts only unwrapped coordinates.
-    
-    *Must use with ```unwrap_coords``` and ```wrap_coords``` if you start with wrapped coordinates.*
-
-8. ```write_lammpstrj```: Function which accepts any of the below listed forms of coordinates and "coordinate_type" and writes a file in the default style of lammps trajectory/dump files.
-
-    a. wrapped (x, y, z, ix, iy, iz)  ```coordinate_type = x```
-
-    b. unwrapped (xu, yu, zu)  ```coordinates_type = xu```
-
-    c. scaled and wrapped (xs, ys, zs, ix, iy, iz)  ```coordinate_type = xs```
-
-    d. scaled and unwrapped (xsu, ysu, zsu)  ```coordinate_type = xsu```
-
-## Usage of kshen/ion_dynamics functions <a name="kshen"/>
-This sub-package includes python analysis scripts for ion-containing systems, including ion pairing/clustering and ion conductivity analyses.
-
-**General block averaging syntax used in these functions:**
-- ```nBlock```: Number of blocks
-- ```blockSize```: Number of time frames in each block
-- ```intrvl```: Number of time frames between the starting point of each block
-
-The following schematic is an example of ```nBlock=3``` that uses all the time frames of the entire simulation (in this case, ```(nBlock-1)*intrvl + blockSize = len(r)```:
-
-```
-!--------------------------Entire simulation--------------------------!
-|________________blockSize________________|
-    intrvl    |________________blockSize________________|
-                  intrvl    |________________blockSize________________|
-
-```
-
-*Detailed explanation of usage of kshen/ion-dynamics is coming.*
-*Example usages of kshen/ion-dynamics functions are available in [kshen/ion-dynamics/example](https://github.com/hall-polymers/pppmd2/tree/development/kshen).*
+## Usage of functions <a name="usage"/>
+We include all the details of the functions in the subfolders including:
+- [jbrown/pppmd](https://github.com/hall-polymers/pppmd2/tree/development/jbrown)
+- [nliesen/dump_tools](https://github.com/hall-polymers/pppmd2/tree/development/nliesen)
+- [kshen/ion_dynamics](https://github.com/hall-polymers/pppmd2/tree/development/kshen)
 
 ## Release description <a name="release"/>
 
