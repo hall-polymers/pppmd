@@ -264,8 +264,8 @@ def special_read(fname, types, num_frames=float('inf'), skip_beginning=0, skip_b
         frame += 1
     
     print '===============Summary==============='
-    print 'Total number of atoms =', num_atoms
-    print 'Total number of ions =', num_types
+    print 'Total number of beads =', num_atoms
+    print 'Total number of selected beads =', num_types
 
     return r, ir, timestep, box_bounds, id2type, id2index
 
