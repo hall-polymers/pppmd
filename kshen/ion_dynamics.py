@@ -6,8 +6,7 @@
 # Author:  Kevin Shen, May 2019
 
 import sys
-import numpy as np 
-import pandas as pd
+import numpy as np
 
 # special_read: read in a lammps trajectory, but only extract data of certain bead types
 #

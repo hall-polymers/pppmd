@@ -1,4 +1,5 @@
 import kshen.ion_dynamics
+import pandas as pd
 
 def main():
     intrvl = 38
