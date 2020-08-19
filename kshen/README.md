@@ -27,26 +27,32 @@ This sub-package includes python analysis scripts for ion-containing systems, in
     ```
 
 2. ```wrap```: Simply wrap coordinates; this is needed because atoms can be slightly outside the periodic boundary even if they are dumped as wrapped coordinates from LAMMPS (see [source](https://lammps.sandia.gov/threads/msg32219.html)).
+
     **Input**: ```r```, ```box_bounds```
     - ```r```, ```box_bounds``` are outputs from ```special_read``` function
+
     **Output**: ```r```, ```boxsize```, ```bound_lo```
     - ```r```: num_frames by num_atoms+1 by 3 of once-again wrapped coordinates
     - ```boxsize```: 3D array to store box dimensions *(does not account for changes in box size)*
     - ```bound_lo```: 3D array to store lower boundaries of the box *(does not account for changes in box size)*
 
 3. ```binbox```: Bins the box and assigns each atom into the corresponding bin.
+
     **Input**: ```r```, ```boxsize```, ```bound_lo```, ```dist_range```
     - ```r```, ```boxsize```, ```bound_lo``` are outputs from ```wrap``` function
     - ```dist_range```: bin size float number
+    
     **Output**: ```bin2id```, ```id2bin```, ```bins```
     - ```bin2id```: number of bins in x by number of bins in y by number of bins in z by num_atoms+1 by num_frames list to map bin to atom id
     - ```id2bin```: num_frames by num_atoms+1 by 3 array to map atom id to bin
     - ```bins```: 3D array to store number of bins in x/y/z
 
 4. ```buildnlist```: Builds a neighbor list for each bead and return a id2neighbors: num_frames by num_atoms+1 by 3 array of neighbor list.
+    
     **Input**: ```r```, ```bin2id```, ```id2bin```, ```bins```, ```boxsize```, ```id2type```, ```dist_range```, ```nearest```
     - ```r```, ```bin2id```, ```id2bin```, ```bins```, ```boxsize```, ```id2type```, ```dist_range``` are outputs from functions above or already defined above
     - ```nearest```: Boolean to determine whether to have only the nearest bead in the neighbor list
+
     **Output**: ```id2neighbors```
     - ```id2neighbors```: num_frames by num_atoms+1 by number of neighbors array to map atom id to neighbor list
 
