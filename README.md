@@ -6,6 +6,7 @@ Development copy of pppmd - a package focused on post-processing of MD polymer s
 - [Usage of Functions](#usage)
     - [jbrown/pppmd](https://github.com/hall-polymers/pppmd2/tree/development/jbrown)
     - [nliesen/dump_tools](https://github.com/hall-polymers/pppmd2/tree/development/nliesen)
+    - [nliesen/beta/MD_tools](https://github.com/hall-polymers/pppmd2/tree/development/nliesen/beta)
     - [kshen/ion_dynamics](https://github.com/hall-polymers/pppmd2/tree/development/kshen)
 - [Release Descriptions](#release) 
 ---
