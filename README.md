@@ -1,6 +1,6 @@
 # PPPMD development
 Development copy of pppmd - a package focused on post-processing of MD polymer simulations. Originated in Hall research group at OSU.
-
+---
 ## Table of Contents
 - [Basic Arrays/Lists and Syntax](#basic)
 - [Usage of Functions](#usage)
@@ -8,7 +8,7 @@ Development copy of pppmd - a package focused on post-processing of MD polymer s
     - [nliesen/dump_tools](https://github.com/hall-polymers/pppmd2/tree/development/nliesen)
     - [kshen/ion_dynamics](https://github.com/hall-polymers/pppmd2/tree/development/kshen)
 - [Release Descriptions](#release) 
-   
+---
 ## Basic Arrays/Lists and Syntax <a name="basic"/>
 All functions follow the procedural coding style of pppmd and work with the same kind of numpy arrays and lists present in the original code. These arrays and lists reproduced below for the sake of clarity, although detailed descriptions can be found in the code as docstrings and comments.
 
@@ -25,7 +25,7 @@ All functions follow the procedural coding style of pppmd and work with the same
 We describe all the details of the functions in the subfolders:
 - [jbrown/pppmd](https://github.com/hall-polymers/pppmd/tree/development/jbrown) -- PPPMD package that includes basic functions to read in LAMMPS trajectory files, calculate particle mean square displacement, radial distribution function, structure factor, and end-to-end autocorrelation function.
 - [nliesen/dump_tools](https://github.com/hall-polymers/pppmd/tree/development/nliesen) -- Advanced PPPMD package that allows 1) read in both wrapped and unwrapped coordinates from a lammps trajectory file and 2) resume reading a lammps trajectory file from where you left off.
-- [nliesen/beta/MD_tools](https://github.com/hall-polymers/pppmd/tree/development/nliesen/beta) -- Recently added package with the ability to bin atoms into 3D cells as their trajectories evolve over time, and to generate neighbor lists for each atom using this binning procedure to speed up the neighbor listing my only checking nearby cells.
+- [nliesen/beta/MD_tools](https://github.com/hall-polymers/pppmd/tree/development/nliesen/beta) -- Recently added package with the ability to bin atoms into 3D cells as their trajectories evolve over time, and to generate neighbor lists for each atom using this binning procedure to speed up the neighbor listing by only checking nearby cells.
 - [kshen/ion_dynamics](https://github.com/hall-polymers/pppmd/tree/development/kshen) -- PPPMD Ion Dynamics Package that includes functions to analyze ion pairing/clustering and calculate ion conductivity.
 
 ## Release Descriptions <a name="release"/>
