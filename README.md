@@ -16,15 +16,16 @@ All functions follow the procedural coding style of pppmd and work with the same
 - Image flags: ```ir[frame, atomID, dimension]``` -- contains periodic image flags as integers  (3D numpy array) or None if unwrapped and ```flags_when_unwrap=False```
 -  Dimensions: ```box_bounds[frame, dimension, low(0)/high(1)]``` -- contains low/high x, y, and z bounds  (3D numpy array)
 - Atom types: ```id2type[atomID]``` -- corresponding integer-valued atom type for each atomID  (1D numpy array)
-- AtomID-->molID: ```id2mol[atomID]``` -- molecule/moleculeID for chain atom/atomID belongs to  (1D numpy array)
-- Frame-->Timestep: ```timestep[frame]``` -- contains timestep of frame (1D numpy array)
-- MolD-->atomIDs```mol2ids``` -- List whose entries are numpy arrays containing all atomIDs for a selected molID. The list is indexed by molID. (list of 1D np arrays)
+- AtomID &rarr; molID: ```id2mol[atomID]``` -- molecule/moleculeID for chain atom/atomID belongs to  (1D numpy array)
+- Frame &rarr; Timestep: ```timestep[frame]``` -- contains timestep of frame (1D numpy array)
+- MolD &rarr; atomIDs```mol2ids``` -- List whose entries are numpy arrays containing all atomIDs for a selected molID. The list is indexed by molID. (list of 1D np arrays)
 
 
 ## Usage of Functions <a name="usage"/>
 We describe all the details of the functions in the subfolders:
 - [jbrown/pppmd](https://github.com/hall-polymers/pppmd/tree/development/jbrown) -- PPPMD package that includes basic functions to read in LAMMPS trajectory files, calculate particle mean square displacement, radial distribution function, structure factor, and end-to-end autocorrelation function.
 - [nliesen/dump_tools](https://github.com/hall-polymers/pppmd/tree/development/nliesen) -- Advanced PPPMD package that allows 1) read in both wrapped and unwrapped coordinates from a lammps trajectory file and 2) resume reading a lammps trajectory file from where you left off.
+- [nliesen/beta/MD_tools](https://github.com/hall-polymers/pppmd/tree/development/nliesen/beta) -- Recently added package with the ability to bin atoms into 3D cells as their trajectories evolve over time, and to generate neighbor lists for each atom using this binning procedure to speed up the neighbor listing my only checking nearby cells.
 - [kshen/ion_dynamics](https://github.com/hall-polymers/pppmd/tree/development/kshen) -- PPPMD Ion Dynamics Package that includes functions to analyze ion pairing/clustering and calculate ion conductivity.
 
 ## Release Descriptions <a name="release"/>
