@@ -3,12 +3,14 @@
 
 This sub-package includes python analysis scripts for ion-containing systems, including ion pairing/clustering and ion conductivity analyses.
 
+| Methods                                                                                   | Description                                                                                                            |
+|-------------------------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------|
 | [special_read](#special_read)(fname, types[, num_frames, skip_beginning, skip_between])   | Read in coordinates of certain types of beads from a LAMMPS trajectory file                                            |
 | [wrap](#wrap)(r, box_bounds)                                                              | Simply wrap coordinates                                                                                                |
 | [binbox](#binbox)(r, boxsize, bound_lo, dist_range)                                       | Bins the box and assigns each atom into the corresponding bin                                                          |
-| [buildnlist](#buildnlist)(r, bin2id, id2bin, bins, boxsize, id2type, dist_range, nearest) | Builds a neighbor list for each bead and return a id2neighbors: num_frames by num_atoms+1 by 3 array of neighbor list. |
+| [buildnlist](#buildnlist)(r, bin2id, id2bin, bins, boxsize, id2type, dist_range, nearest) | Builds a neighbor list for each bead and return a id2neighbors |
 
-1. ```special_read```: Allows you to read in coordinates of certain types of beads from a lammps trajectory file (slightly modified version of original ```pppmd.read_lammpstrj``` function. 
+1. ```special_read```: Allows you to read in coordinates of certain types of beads from a lammps trajectory file (slightly modified version of original ```pppmd.read_lammpstrj``` function. <a name="special_read"/>
 
     **Parameters**: ```fname```, ```types```, ```num_frames```, ```skip_beginning```, ```skip_between```
     - ```fname```: filename string or 'stdin' (or a value that evaluates to false) for reading from standard in 
@@ -31,7 +33,7 @@ This sub-package includes python analysis scripts for ion-containing systems, in
     Total number of selected beads = num_types
     ```
 
-2. ```wrap```: Simply wrap coordinates; this is needed because atoms can be slightly outside the periodic boundary even if they are dumped as wrapped coordinates from LAMMPS (see [source](https://lammps.sandia.gov/threads/msg32219.html)).
+2. ```wrap```: Simply wrap coordinates; this is needed because atoms can be slightly outside the periodic boundary even if they are dumped as wrapped coordinates from LAMMPS (see [source](https://lammps.sandia.gov/threads/msg32219.html)). <a name="wrap"/>
 
     **Parameters**: ```r```, ```box_bounds```
     - ```r```, ```box_bounds``` are outputs from ```special_read``` function
@@ -41,7 +43,7 @@ This sub-package includes python analysis scripts for ion-containing systems, in
     - ```boxsize```: 3D array to store box dimensions *(does not account for changes in box size)*
     - ```bound_lo```: 3D array to store lower boundaries of the box *(does not account for changes in box size)*
 
-3. ```binbox```: Bins the box and assigns each atom into the corresponding bin.
+3. ```binbox```: Bins the box and assigns each atom into the corresponding bin.  <a name="binbox"/>
 
     **Parameters**: ```r```, ```boxsize```, ```bound_lo```, ```dist_range```
     - ```r```, ```boxsize```, ```bound_lo``` are outputs from ```wrap``` function
@@ -52,7 +54,7 @@ This sub-package includes python analysis scripts for ion-containing systems, in
     - ```id2bin```: num_frames by num_atoms+1 by 3 array to map atom id to bin
     - ```bins```: 3D array to store number of bins in x/y/z
 
-4. ```buildnlist```: Builds a neighbor list for each bead and return a id2neighbors: num_frames by num_atoms+1 by 3 array of neighbor list.
+4. ```buildnlist```: Builds a neighbor list for each bead and return a id2neighbors: num_frames by num_atoms+1 by 3 array of neighbor list.   <a name="buildnlist"/>
     
     **Parameters**: ```r```, ```bin2id```, ```id2bin```, ```bins```, ```boxsize```, ```id2type```, ```dist_range```, ```nearest```
     - ```r```, ```bin2id```, ```id2bin```, ```bins```, ```boxsize```, ```id2type```, ```dist_range``` are outputs from functions above or already defined above
