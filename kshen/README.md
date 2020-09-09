@@ -10,7 +10,7 @@ This sub-package includes python analysis scripts for ion-containing systems, in
 | [binbox](#binbox)(r, boxsize, bound_lo, dist_range)                                       | Bin the box and assigns each atom into the corresponding bin                                                          |
 | [buildnlist](#buildnlist)(r, bin2id, id2bin, bins, boxsize, id2type, dist_range, nearest) | Build a neighbor list for each bead and return a id2neighbors |
 | [ipcorr](#ipcorr)(r, id2neighbors) | Calculate ion pair autocorrelation function|
-| [cluster_autocorr](#cluster_autocorr)(frame, sflag) | Subfunction to calculate ion cluster autocorrelation function|
+| [cluster_autocorr](#cluster_autocorr)(frame, sflag) | Calculate ion cluster autocorrelation function|
 | [buildclusterlist](#buildclusterlist)(r, id2neighbors_1stshell, id2neighbors_2ndshell) | Calculate average ion cluster size and ion cluster autocorrelation function, and analyze local ion morphology (categorize ions into 4 groups: aggregate, contact ion pair, monomer-separated ion pair, free ion)|
 
 1. ```special_read```: Allows you to read in coordinates of certain types of beads from a lammps trajectory file (slightly modified version of original ```pppmd.read_lammpstrj``` function. <a name="special_read"/>
