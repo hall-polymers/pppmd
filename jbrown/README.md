@@ -1,4 +1,4 @@
-## Original PPPMD Package developed by Jonathon R. Brown
+## Original PPPMD Package developed by Jonathan R. Brown
 
 1. ```read_lammpstrj```: Allows you to read in only wrapped coordinates (scaled or unscaled) from a lammps trajectory file.
 
