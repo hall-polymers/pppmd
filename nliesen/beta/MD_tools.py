@@ -1,6 +1,8 @@
 #!/usr/bin/env python2
 # coding: utf-8
 
+#%%
+
 # Purpose: Original focus on getting neighbors within some spherical cutoff of each atom
 # Author: N. Liesen(NTL)
 # Resources: Most of the code is stolen from cluster_v3.1.py, which was a collaborative
@@ -11,8 +13,12 @@
 
 import numpy as np
 import random
-#import os
-#import sys
+from math import pi, sqrt, cos, sin, floor
+
+import sys
+sys.path.append("../")
+import dump_tools as dtools
+
 import matplotlib.style
 import matplotlib.font_manager
 import matplotlib as mpl
@@ -20,7 +26,8 @@ import matplotlib.pyplot as plt
 from mpl_toolkits import mplot3d
 plt.interactive(True)
 from mpl_toolkits.mplot3d import Axes3D
-from math import pi, sqrt, cos, sin, floor
+
+import pprint as pp
 
 # aliases
 x = 0
@@ -103,6 +110,7 @@ def make_random_vector(desired_radius = 1.0):
     """
     theta = random.random()*2*pi  # theta dist uniform over [0, 2pi]
     vz = random.random()*2 - 1  # uniform dist over cos(phi) from [-1,1]
+    vx = sqrt(1-vz**2)*cos(theta)
     vy = sqrt(1-vz**2)*sin(theta)
     r = sqrt(vx**2+vy**2+vz**2)
     scale = desired_radius/r  # Normalize vector
@@ -242,6 +250,107 @@ def bin_atoms_in_3D(number_bins, box_bound, positions, chosen_frame):
 
     return bin_to_id, id_to_bin
 
+class Contacts:
+    """
+    This class will focus in on close contacts and their positions
+    """
+    def __init__(self, current_frame, contact_cutoff):
+        self.contact_pairs = []  # list of (atomi, atomj) sets for contacts; sets used b/c order
+        # of atoms doesn't matter
+        self.chain_pairs = []
+        self.contact_positions = []  # list of position vectors (arrays) for contacts
+        self.number_contacts = 0
+        self.frame = current_frame
+        self.contact_rcut = contact_cutoff
+        self.is_wrapped = False
+        self.contact_flags = None
+        self.contactID2cluster = {}  # list of integers identifying the cluster to which each contact
+        # belongs. The array is indexed by contactID, an integer uniquely identifying each contact.
+    
+    def add_contact(self, ID_atomI, ID_atomJ, r_atomI, r_atomJ, ID_molA, ID_molB, check_for_duplicate = True):
+        """
+        Checks if the i/j pair of atoms already has been counted - if not, stores the pair of atoms
+        as a contact along with the average position vector of the atoms making up the contact.
+        """
+
+        if (not check_for_duplicate) or ({ID_atomI, ID_atomJ} not in self.contact_pairs):  # or is short circuit
+            self.contact_pairs.append({ID_atomI, ID_atomJ})  # add {i, j} pair to list
+            self.chain_pairs.append({ID_molA, ID_molB})
+            self.contact_positions.append((r_atomI + r_atomJ) / 2.)  # add ave contact position vector
+            self.number_contacts += 1
+
+    def wrap_contacts(self, boxbounds):
+        """
+        The way we calculate average positions for contacts, they must be re-wrapped; this is b/c some
+        contact positions will fall between the periodic image of one chain, and the main image of another.
+        Wrapping will ensure that all identified contact's position vectors will fall within the central
+        simulation box.
+        """
+        r_contacts = np.array(self.contact_positions).reshape(1, len(self.contact_positions), 3)
+        self.contact_positions, self.contact_flags = dtools.wrap_coords(r_contacts, boxbounds)
+        self.is_wrapped = True
+
+    def contacts_by_chain(self):
+        """
+        NOTE: Cannot use normal sets as keys, dict keys must be immutable
+        In the end I decided to use frozen sets as the keys (these are just
+        normal sets, but immutable). I wanted to use sets b/c the order in which
+        the ij chain pairs are passed as keys shouldn't matter. Keys ij and ji
+        should result in the same corresponding list of contactIDs.
+        """
+        chains2contacts = {}
+        for contactID in range(self.number_contacts):
+            chain_i, chain_j = self.chain_pairs[contactID]
+            chain_ij = frozenset((chain_i, chain_j))
+            if chain_ij in chains2contacts.keys():
+                chains2contacts[chain_ij].append(contactID)
+            else:
+                chains2contacts[chain_ij] = [contactID]
+        self.chains_to_contacts = chains2contacts 
+
+    def get_nBeads_separating_contacts(self, contactIDx, contactIDy, atomID2mol):
+        """
+        This function will accept two contactIDs, provided that the two contacts belong to the
+        same ij pair of chains (i.e. contact IDs/points x and y both occur as a result of contact
+        between beads on chains i and j); the function will identify the number of beads
+        separating bead B_ix (the bead on chain i participating in contact point x) and B_iy
+        (the bead on chain participating in contact point y). It will similarly find the number
+        of beads separating beads B_jx and B_jy. The returned value will correspond to
+        min((B_ix - B_iy - 1), (B_jx - B_jy - 1)). i.e. if the number of beads separating bead
+        B_ix and B_iy is 5, and the number of beads separating beads B_jx and B_jy is 15 then
+        we will return 5; the justification being that if any bead in contact x is w/in some number
+        of beads (usually 20) of a bead participating in contact y, then the two contacts belong to
+        the same cluster. 
+
+        The purpose of returning the number of monomers separating these pairs of beads on chains
+        i and j is to determine whether contacts x and y belong to the same cluster or not. The
+        clustering will likely need to be done recursively...
+        """
+
+        # First, check that the two contact points actually originate from the same two chains
+        if not self.chain_pairs[contactIDx] == self.chain_pairs[contactIDy]:
+            raise Exception('The 2 contact points specified originate from different pairs of chains')
+        elif contactIDx == contactIDy:
+            raise Exception('The two contact IDs are the same.')
+        # NOTE: Assume that a lower integer-valued moleculeID implies a lower integer-valued atomID
+
+        atomIDs = {}
+        chain_i, chain_j = sorted(list(self.chain_pairs[contactIDx]))
+        for contact in (contactIDx, contactIDy):
+            for atom in self.contact_pairs[contact]:
+                if id2mol[atom] == chain_i:
+                    atomIDs[(contact, chain_i)] = atom
+                elif id2mol[atom] == chain_j:
+                    atomIDs[(contact, chain_j)] = atom
+
+        beads_btwn_contacts_i = abs(atomIDs[(contactIDx, chain_i)] - atomIDs[(contactIDy, chain_i)])
+        beads_btwn_contacts_j = abs(atomIDs[(contactIDx, chain_j)] - atomIDs[(contactIDy, chain_j)])
+
+        return min(beads_btwn_contacts_i, beads_btwn_contacts_j)
+
+    def __str__(self):
+        return "In frame {0} there are {1} close contacts, given a distance of {2}".format(self.frame,
+        self.number_contacts, self.contact_rcut)
 
 class Neighbors:
     """Each neighbor will have it's atomID stored in self.atom_ids. The atomID's corresponding molID will be stored in
@@ -253,26 +362,74 @@ class Neighbors:
         self.mol_ids = []
         self.distances = []
 
+        self.nneigh = None  # atomID of nearest neighbor
+        self.nneigh_dist = None  # distance central atom --> nearest neighbor
+        self.farthest_neigh = None  # atomID of farthest neighbor
+        self.farthest_dist = None  # distance central atom --> farthest neighbor
+
     def add_neighbor(self, new_atomID, new_molID, dist):
         self.atom_ids.append(new_atomID)
         self.mol_ids.append(new_molID)
         self.distances.append(dist)
         return
 
+    def get_nearest_neighbor(self):
+        """
+        This method will find the neighbor nearest to the central atom.
+
+        returns:
+        nneigh: the atomID of the nearest neighbor
+        nneigh_dist: the distance between the central atom and this nearest neighbor
+        """
+        number_neighbors = len(self.atom_ids)
+        if number_neighbors > 0:
+            nneigh = self.atom_ids[np.argmin(np.array(self.distances))]
+            nneigh_dist = np.min(np.array(self.distances))
+            self.nneigh = nneigh
+            self.nneigh_dist = nneigh_dist
+            return nneigh, nneigh_dist
+        elif number_neighbors == 0:
+            print("no neighbors!")
+            return None, None
+
+    def get_farthest_neighbor(self):
+        """
+        This method will find the neighbor farthest from the central atom.
+
+        returns:
+        farthest_neigh: the atomID of the neighbor farthest from the central atom
+        farthest_dist: the distance between the central atom and the farthest neighbor
+        """
+        number_neighbors = len(self.atom_ids)
+        if number_neighbors > 0:
+            farthest_neigh = self.atom_ids[np.argmin(np.array(self.distances))]
+            farthest_dist = np.max(np.array(self.distances))
+            self.farthest_neigh = farthest_neigh
+            self.farthest_dist = farthest_dist
+            return farthest_neigh, farthest_dist
+        elif number_neighbors == 0:
+            print("no neighbors!")
+            return None, None
+
     def __str__(self):  # modify print behavior of class instances
         number_neighbors = len(self.atom_ids)
-        nneigh_dist = np.min(np.array(self.distances))
-        farthest_dist = np.max(np.array(self.distances))
-        return "atomID {0} has {1} neighbors. ".format(self.center_atomID, number_neighbors) + \
-            "The nearest and farthest neighbors are at a distance of {0} and {1} respectively.".format(nneigh_dist, farthest_dist)
-
+        if number_neighbors > 0:
+            #nneigh_dist = np.min(np.array(self.distances))
+            #farthest_dist = np.max(np.array(self.distances))
+            _, nneighbor_dist = self.get_nearest_neighbor()
+            _, farthest_dist = self.get_farthest_neighbor()
+            return "atomID {0} has {1} neighbors. ".format(self.center_atomID, number_neighbors) + \
+                "The nearest and farthest neighbors are at a distance of {0} and {1} respectively.".format(nneighbor_dist, farthest_dist)
+        elif number_neighbors == 0:
+            return "atomid {0} has no neighbors".format(self.center_atomID)
 
 #%%
 
 # Req'd functions: get_box_length, get_bin_dimensions, bin_atoms_in_3D
 # Req'd classes: Neighbors
 # Note: The special_neighs feature relies on atomIDs being sequential in the traj file!! 
-def make_neighbor_list(r_wrap, box_bounds, RCUT, frame, atom2molid, special_neighs=3):
+def make_neighbor_list(r_wrap, box_bounds, RCUT, frame, atom2molid, id2type, special_neighs=3,
+ excluded_types = [], is_periodic = (True, True, True)):
     # FIXME: id2mol should be an argument, right now it is grabbing a global variable
     """This function will break the simulation domain into 3D cells ("voxels") and then
     assign each atom to a voxel depending on the wrapped position coordinates, r_wrap,
@@ -303,7 +460,44 @@ def make_neighbor_list(r_wrap, box_bounds, RCUT, frame, atom2molid, special_neig
                                     id2neighbors[some_atomID].mol_ids: molecule ids for each atom ID in neigh list (1D list)
     """
 
-    number_atoms = np.shape(r_wrap)[1] - 1
+
+    # argument handling
+    if (type(r_wrap) != np.ndarray) or (r_wrap.ndim != 3):
+        raise TypeError('Coordinates, r[frame, atomID, dim], must be passed as a 3D numpy array')
+    elif (type(box_bounds) != np.ndarray) or (box_bounds.ndim != 3):
+        raise TypeError('Box Bounds, box_bounds[frame, dim, lower/upper] must be passed as 3D numpy array')
+
+    number_atoms = np.shape(r_wrap)[1] - 1  # req'd for handling of the remaining arguments
+
+    if type(frame) != int:
+        raise TypeError('frame must be integer-valued')
+    elif type(special_neighs) != int:
+        raise TypeError('special neighbors parameter must be integer-valued')
+
+    if type(excluded_types) != list:
+        raise TypeError('The excluded bead types must be passed as a list')
+
+    #if type(id2type) != np.ndarray or (len(id2type) != (number_atoms + 1))\
+    # or (id2type.ndim != 1):
+    #    raise TypeError('The atomID --> atomtype array, id2type, must be a 1D numpy array whose length is\
+    #    commensurate with the number of atoms')
+    #elif type(atom2molid) != np.ndarray or (len(atom2molid) != (number_atoms + 1))\
+    # or (atom2molid.ndim != 1):
+    #    raise TypeError('The atomID --> molid array, atom2molid, must be a 1D numpy array whose length is\
+    #    commensurate with the number of atoms')
+
+    if type(is_periodic) != tuple or len(is_periodic) != 3:
+        raise TypeError('is_periodic must be passed as a tuple of length 3')
+
+    for xyz_flag in is_periodic:
+        if type(xyz_flag) != bool:
+            raise TypeError('Boundary condition flags in is_periodic must be boolean')
+    
+    # aliases
+    x = 0
+    y = 1
+    z = 2
+
     Lx, Ly, Lz = get_box_length(box_bounds, frame)
     num_xbins, num_ybins, num_zbins, _, _, _ = get_bin_dimensions(Lx, Ly, Lz, RCUT, frame)
     print "Started 3D binning procedure..."
@@ -315,6 +509,7 @@ def make_neighbor_list(r_wrap, box_bounds, RCUT, frame, atom2molid, special_neig
 
     id2neighbors = [ Neighbors(atom_i) for atom_i in range(0, number_atoms + 1)]  # List of neighbor objects
     id2neighbors[0] = None  # atomIDs are 1-indexed
+    my_contacts = Contacts(frame, RCUT)
 
     # loop over beads and their local area to build a neighbor list
     for atom_i in xrange(1, number_atoms + 1):
@@ -335,31 +530,59 @@ def make_neighbor_list(r_wrap, box_bounds, RCUT, frame, atom2molid, special_neig
         last_zbin = num_zbins - 1
 
         # Loops over 27 cells/voxels - central(atomID belongs to this) + touching cells
+        """
+        We must remember that our PGN systems aren't periodic along the z-dimension. This means
+        that near the edges of the monolayer (meaning the +z or -z boundary) we need to check
+        fewer bins, since there is just a wall or vacuum aloong the -z and +z boundaries respectively.
+        To handle cases where the boundary conditions are fixed/shrink-wrapped/or some other
+        non-periodic situation I've added...
+        i. An argument indicating whether each dimension is periodic or not.
+        ii. A check that the relevant dimension is periodic when deciding to check a periodic image of a
+        voxel for neighbors.
+        """
         for i in xrange(atoms_xbin-1, atoms_xbin+2):
-            if i == -1:
+            # if not periodic
+            if i == -1 and not is_periodic[x]:
+                continue
+            elif i == last_xbin + 1 and not is_periodic[x]:
+                continue
+            # if periodic
+            elif i == -1 and is_periodic[x]:
                 i = last_xbin  # Periodic
                 xshift = -Lx
-            elif i == last_xbin + 1:
+            elif i == last_xbin + 1 and is_periodic[x]:
                 i = first_bin  # Periodic
                 xshift = Lx
             else:
                 xshift = 0
 
             for j in xrange(atoms_ybin-1, atoms_ybin+2):
-                if j == -1:
+                # if not periodic
+                if j == -1 and not is_periodic[y]:
+                    continue 
+                elif j == last_ybin + 1 and not is_periodic[y]:
+                    continue
+                # if periodic
+                elif j == -1 and is_periodic[y]:
                     j = last_ybin
                     yshift = -Ly
-                elif j == last_ybin + 1:
+                elif j == last_ybin + 1 and is_periodic[y]:
                     j = first_bin
                     yshift = Ly
                 else:
                     yshift = 0
 
                 for k in xrange(atoms_zbin-1, atoms_zbin+2):
-                    if k == -1:
+                    # if not periodic
+                    if k == -1 and not is_periodic[z]:
+                        continue
+                    elif k == last_zbin + 1 and not is_periodic[z]:
+                        continue
+                    # if periodic
+                    elif k == -1 and is_periodic[z]:
                         k = last_zbin
                         zshift = -Lz
-                    elif k == last_zbin + 1:
+                    elif k == last_zbin + 1 and is_periodic[z]:
                         k = first_bin
                         zshift = Lz
                     else:
@@ -367,6 +590,10 @@ def make_neighbor_list(r_wrap, box_bounds, RCUT, frame, atom2molid, special_neig
 
                     # loop over the beads in this box and calculate the distance
                     for test_id_j in bin2id[i][j][k]:
+                        if id2type[atom_i] in excluded_types:
+                            continue 
+                        if id2type[test_id_j] in excluded_types:
+                            continue
                         # if it's already in the nhood, don't bother
                         if test_id_j in id2neighbors[atom_i].atom_ids:  # check if test atom is already in atom i's nlist
                             continue
@@ -376,16 +603,32 @@ def make_neighbor_list(r_wrap, box_bounds, RCUT, frame, atom2molid, special_neig
                             if atomIDs_too_close(atom_i, test_id_j, special_neighs):  # Are there at least special_neighs beads between the 2 atoms
                                 continue
 
-                        dx = r_wrap[frame][test_id_j][x] + xshift - r_wrap[frame][atom_i][x]
-                        dy = r_wrap[frame][test_id_j][y] + yshift - r_wrap[frame][atom_i][y]
-                        dz = r_wrap[frame][test_id_j][z] + zshift - r_wrap[frame][atom_i][z]
+                        # These contact positions will need to be re-wrapped
+                        rx_atom_j = r_wrap[frame][test_id_j][x] + xshift
+                        rx_atom_i = r_wrap[frame][atom_i][x]
+                        ry_atom_j = r_wrap[frame][test_id_j][y] + yshift
+                        ry_atom_i = r_wrap[frame][atom_i][y]
+                        rz_atom_j = r_wrap[frame][test_id_j][z] + zshift
+                        rz_atom_i = r_wrap[frame][atom_i][z]
+
+                        #dx = r_wrap[frame][test_id_j][x] + xshift - r_wrap[frame][atom_i][x]
+                        #dy = r_wrap[frame][test_id_j][y] + yshift - r_wrap[frame][atom_i][y]
+                        #dz = r_wrap[frame][test_id_j][z] + zshift - r_wrap[frame][atom_i][z]
+                        dx = rx_atom_j - rx_atom_i
+                        dy = ry_atom_j - ry_atom_i
+                        dz = rz_atom_j - rz_atom_i
                         dr2 = dx*dx + dy*dy + dz*dz
 
                         # if close enough add to the neighbor list
                         if dr2 < RCUT**2:
                             id2neighbors[atom_i].add_neighbor(test_id_j, atom2molid[test_id_j], np.sqrt(dr2))
                             id2neighbors[test_id_j].add_neighbor(atom_i, atom2molid[atom_i], np.sqrt(dr2))
-    return id2neighbors  #return instance of Atoms class containing list of Neighbor objects w/ atomIDs, molIDs, and distances for neighbors
+                            r_atom_i = np.array([rx_atom_i, ry_atom_i, rz_atom_i])
+                            r_atom_j = np.array([rx_atom_j, ry_atom_j, rz_atom_j])
+                            my_contacts.add_contact(atom_i, test_id_j, r_atom_i, r_atom_j,
+                            atom2molid[atom_i], atom2molid[test_id_j], check_for_duplicate = False)  # store as close contact
+    my_contacts.wrap_contacts(box_bounds)  # some contacts will end up outside the box -- easiest way to fix is to just re-wrap
+    return id2neighbors, my_contacts  #return instance of Atoms class containing list of Neighbor objects w/ atomIDs, molIDs, and distances for neighbors
 
 
 # %%
@@ -415,6 +658,7 @@ if __name__ == '__main__':  # set up to run as jupyter notebook cells
     nDims = 3
     r = np.zeros((nFrames, nAtoms + 1, nDims))
     id2mol = [0]
+    id2type = [0]
 
     # generate atomic positions such that the atoms fall onto the surface
     # of spheres of different radii
@@ -422,12 +666,14 @@ if __name__ == '__main__':  # set up to run as jupyter notebook cells
     atomid = 1 
     r[frame, atomid] = my_center
     id2mol.append(atomid)
+    id2type.append(atomid)
     atomid += 1
     for radius in my_radii:
         for ii in range(points_per_radius):
             my_vector = make_random_vector(desired_radius = radius)
             r[frame, atomid] = my_center + my_vector 
             id2mol.append(atomid)  # new molecule for every placed bead
+            id2type.append(atomid)  # new type for every placed bead
             atomid += 1
 
     # make box bounds for data
@@ -472,7 +718,7 @@ if __name__ == '__main__':  # set up to run as jupyter notebook cells
         ax.scatter3D(atom_positions[x], atom_positions[y], atom_positions[z])
 
     # Now that we have atomic positions we can test the neighbor list
-    id2neighlist = make_neighbor_list(r, boxbds, 4, frame, id2mol, special_neighs=0)
+    id2neighlist, _ = make_neighbor_list(r, boxbds, 4, frame, id2mol, id2type, special_neighs=0)
 
     neighbors = id2neighlist[1].atom_ids
     neighbors.sort() 
@@ -490,3 +736,122 @@ if __name__ == '__main__':  # set up to run as jupyter notebook cells
                 print ("Oh no!")
 
     print "Done"
+
+#%%
+
+# Now running tests with real lammpstrj files
+
+# read in smoothed lammpstrj file
+mylammpstrj = 'smoothed_over_10frames.lammpstrj'  # these coordinates are unwrapped
+r, _, tsteps, boxbds, id2type, id2mol, mol2ids = dtools.read_lammpstrj_plus(fname = mylammpstrj,
+ flags_when_unwrap = False)
+
+# wrap smoothed coordinates
+r, ir = wrap_coords(r, boxbds)
+
+chain_length = 160
+number_frames = r.shape[0]
+
+my_write_mode = 'w'
+#rCut = 0.5  # sigma
+#for frame in range(number_frames):
+#rCut_list = np.arange(0.2, 1.3, 0.1)
+rCut_list = [0.3, 0.4]
+
+nContacts = []
+for rCutoff in rCut_list:
+    for frame in range(1):
+        # get neighbors using smoothed and wrapped coordinates
+        id2neighlist, contacts = make_neighbor_list(r, boxbds, rCutoff, frame, id2mol, id2type, special_neighs = chain_length,
+         excluded_types = [3], is_periodic = (True, True, False))  # z isn't periodic
+
+        # writing our contacts to a file...
+        contactID2mol = [1 for i in range(contacts.number_contacts)]
+        contactID2type = [1 for i in range(contacts.number_contacts)]
+        my_box_bounds = boxbds[frame].reshape(1, 3, 2)
+
+        dtools.write_lammpstrj('contacts_' + str(rCutoff) + 'sigma_first_frame.lammpstrj', my_box_bounds,
+         np.array([frame]), contactID2mol, contactID2type, contacts.contact_positions, image_flags = contacts.contact_flags,
+         coordinate_type = 'x', write_mode = my_write_mode) 
+
+        #dtools.write_lammpstrj('wrapped_smoothed_first_frame.lammpstrj', my_box_bounds,
+        # np.array([frame]), id2mol, id2type, r[frame, :, :].reshape(1, r.shape[1], r.shape[2]),
+        #  image_flags = ir[frame, :, :].reshape(1, ir.shape[1], ir.shape[2]),
+        # coordinate_type = 'x', write_mode = my_write_mode) 
+
+        nContacts.append(contacts.number_contacts)
+
+        my_write_mode = 'a'  # append to lammpstrj files we just created for the first frame
+
+# Now that we have managed to generate lammpstrj files containing all the contacts we should
+# generate a heat map using the positions of these atoms. One option is to read the .lammpstrj
+# file and then turn the results into a heat map. We can use the code for binning bond vectors
+# from our voxelization scripts to do this in order to avoid re-writing fairly similar code.
+# The basic steps involved should be to convert to scaled coordinates, re-scale based on the
+# average box dimensions, and then bin in 3D using the average box dimensions. The heat map can
+# be visualized using paraview. The results can be output in the same manner as the bond counts.
+
+#%%
+
+"""
+# pick an arbitrary atomID and find the nearest contact in its neighbor list
+my_atomID = 30000
+print(id2neighlist[my_atomID])
+neighbors = id2neighlist[my_atomID].atom_ids
+neighbors.sort() 
+print neighbors
+
+for atom, distance in zip(id2neighlist[my_atomID].atom_ids, id2neighlist[my_atomID].distances):
+    print "atom {0} is at a distance of {1} from atom {2}".format(atom, distance, 
+    id2neighlist[my_atomID].center_atomID)
+
+id2neighlist[my_atomID].get_nearest_neighbor()
+nearest_neighbor = id2neighlist[my_atomID].nneigh
+dist2nearest_neighbor = id2neighlist[my_atomID].nneigh_dist
+
+# now find the moleculeID for this nearest neighbor
+central_mol = id2mol[my_atomID]
+nearest_mol = id2mol[nearest_neighbor]
+
+print(central_mol)
+print(nearest_mol)
+"""
+
+# %%
+
+# %%
+
+# for two chains create a list of atom pairs and the distances between the two atoms
+
+# lets start with an arbitrary chain
+chainID = 450
+atoms_in_chain = mol2ids[chainID]
+
+# for each atom in the selected chain find all atoms which are the nearest neighbor to some
+# atom on the chain
+atom_i = []
+chain_i = []
+atom_j = []
+chain_j = []
+neigh_distances = []
+for atomID in atoms_in_chain:
+    nearest_neighbor, nearest_neigh_distance = id2neighlist[atomID].get_nearest_neighbor()
+    if nearest_neighbor is not None:
+        atom_i.append(atomID)
+        chain_i.append(id2mol[atomID])
+        atom_j.append(nearest_neighbor)
+        chain_j.append(id2mol[nearest_neighbor])
+        neigh_distances.append(nearest_neigh_distance)
+
+# find the chain which passes nearest to an atom on chain i
+nearest_chain = chain_j[np.argmin(np.array(neigh_distances))]
+print chainID
+print nearest_chain
+
+#%%
+
+cutoffs = np.arange(0.2, 1.3, 0.1)
+coeff = 316
+ypts = coeff*cutoffs**3
+
+# %%

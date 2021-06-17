@@ -754,7 +754,7 @@ def correct4_center_mass(r_unwrap, id_2_type, type_2_mass):
 # Added by N. Liesen on 7/2/20  -- Add ability to write out a lammps trajectory/dump file
 def write_lammpstrj(file_name, box_bounds, timestep, id_to_mol, id_to_type, \
                     r, image_flags=None, boundary_conditions=('pp', 'pp', 'pp'), \
-                    coordinate_type=None):
+                    coordinate_type=None, write_mode='w'):
     """Given the appropriate box boundaries, timesteps, moleculeIDs and types (for each atomID), positions,
     image flags, boundary conditions, and coordinate type/style, we can write a lammpstrajectory file, formatted
     identically to the default settings used by lammps to write trajectory files. This function doesn't return
@@ -837,7 +837,7 @@ def write_lammpstrj(file_name, box_bounds, timestep, id_to_mol, id_to_type, \
     if not file_name or file_name == 'stdin':
         f = sys.stdin
     else:
-        f = open(file_name, 'w')
+        f = open(file_name, write_mode)
     
     #Determine coordinate type - needs some work
     if (image_flags is None) and (coordinate_type is None):
