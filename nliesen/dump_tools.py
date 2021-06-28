@@ -868,3 +868,101 @@ def write_lammpstrj(file_name, box_bounds, timestep, id_to_mol, id_to_type, \
                 sys.exit("Please input valid coordinate type: \'x\', \'xs\', \'xu\', or \'xsu\'")
     f.close()
     return
+
+
+# Add ability to subtract out center of mass drift from coordinates
+# NOTE: By default assume x, y, and z should all be corrected
+# NOTE: The below comes from the PGN bond vector field scripts
+def correct4_center_mass_plus(r_unwrap, id_2_type, type_2_mass, x_is_periodic = True, y_is_periodic = True, z_is_periodic = True):
+    """
+    This function corrects any unwrapped coordinates which are passed for the center of mass motion which occurs over time.
+    The coordinates are corrected such that the center of mass of the system matches that in the first frame in the passed
+    array (r_unwrap). The function also gives the user the opportunity to decide whether the center of mass should be corrected
+    along each dimenions or not using x_is_periodic, y_is_periodic, and z_is_periodic.
+
+    Parameters 
+    r_unwrap[frame, atomID, dimension]: Unwrapped coordinates for all atoms in all frames; coordinates
+    are indexed by the time/frame, atomID, and the x/y/z/dimension.
+
+    id_2_type: Contains integer-valued types for each atom. The list is indexed by atomID
+    (list of ints)
+
+    type_2_mass: Contains the masses of a single bead for each atom type (dict; keys are
+    integer atom types, values are float-valued masses)
+
+    x_is_periodic, y_is_periodic, z_is_periodic: Flag indicating whether x/y/z dimension should be corrected for
+    its center of mass motion. In this case whether we want to correct for the center of mass motion depends
+    on the boundary conditions, but more generally these flags can be used to indicate whether the center of mass
+    motion should be corrected along that dimension. (bool)
+
+    Returns:
+    r_corrected[frame, atomID, dimension]: Returns unwrapped atomic coordinates after correcting for the center of mass motion 
+    """
+
+    # aliases
+    x = 0
+    y = 1
+    z = 2
+
+    num_frames = np.shape(r_unwrap)[0]
+
+    def get_center_mass(r_t, id_to_type, type_to_mass):
+        """
+        This function calculates the center of mass position vector for a collection of coordinates
+        at a specific time/frame. This calculation requires a list of atom types for each atom, and
+        a dictionary containing masses for each atom type.
+
+        Parameters:
+        r_t[atomID, dimension]: Unwrapped coordinates for all atoms at a specific time point/
+        in a specific frame; indexed by frame, atomID, and the dimension/axis (3D np.array of floats)
+
+        id_to_type: Contains integer-valued types for each atom. The list is indexed by atomID
+        (list of ints)
+
+        type_to_mass: Contains the masses of a single bead for each atom type (dict; keys are
+        integer atom types, values are float-valued masses)
+
+        Returns:
+        com_position_t[dimension]: Contains the center of mass position vector for passed set
+        of coordinates, r_t, after taking into account the masses of each atom type (type_to_mass)
+        and the type of each atom (id_to_type) (1D np.array) 
+        """
+
+        mr_t = np.zeros_like(r_t)
+        total_mass = 0
+        for type_bead, mass in type_to_mass.items():
+            mass_beads, atomIDs_of_type = net_mass_beads(type_bead, mass, id_to_type)
+            total_mass = total_mass + mass_beads
+            mr_t[atomIDs_of_type, :] = r_t[atomIDs_of_type, :]*mass
+
+        com_position_t = np.sum(mr_t, axis = 0)/total_mass  # Center-of-mass position for frame t
+        return com_position_t
+
+    # Get center of mass at frame 0
+    com_position_t0 = get_center_mass(r_unwrap[0, :, :], id_2_type, type_2_mass)
+
+    # TODO: Update this function to consider whether each dimension is periodic or not
+    # Get center of mass position for each frame and then subtract off from unwrapped coords
+    r_corrected = np.zeros_like(r_unwrap)
+    for t in np.arange(0, num_frames):
+        com_position_t = get_center_mass(r_unwrap[t, :, :], id_2_type, type_2_mass)
+        change_com = com_position_t - com_position_t0  # Find change in center-of-mass since frame 0
+        # Now we want to reset the center of mass back to its frame 0 value
+        #if x_is_periodic and y_is_periodic and z_is_periodic:
+        #    r_corrected[t, :, :] = r_unwrap[t, :, :] - change_com  # works via broadcasting - subtract change in COM
+        if x_is_periodic:
+            r_corrected[t, :, x] = r_unwrap[t, :, x] - change_com[x]  # works via broadcasting - subtract change in X component of COM
+        else:
+            r_corrected[t, :, x] = r_unwrap[t, :, x]
+
+        if y_is_periodic:
+            r_corrected[t, :, y] = r_unwrap[t, :, y] - change_com[y]
+        else:
+            r_corrected[t, :, y] = r_unwrap[t, :, y]
+
+        if z_is_periodic:
+            r_corrected[t, :, z] = r_unwrap[t, :, z] - change_com[z]
+        else:
+            r_corrected[t, :, z] = r_unwrap[t, :, z]
+
+    return r_corrected  # Return unwrapped coordinates with center-of-mass reset to its frame 0 value in each frame t
