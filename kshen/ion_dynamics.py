@@ -26,6 +26,7 @@ import numpy as np
 # NOTE: assumes that the number of atoms in the simulation is fixed
 # NOTE: also assumes that the coordinates are wrapped, so x or xs type coordinates are allowed but not xu or xsu
 #
+#random
 def special_read(fname, types, num_frames=float('inf'), skip_beginning=0, skip_between=0):
     print "Reading configurations..."
     # helper function to read in the header and return the timestep, number of atoms, and box boundaries
