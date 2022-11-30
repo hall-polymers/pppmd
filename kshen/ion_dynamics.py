@@ -1,5 +1,5 @@
 #!/usr/bin/python
- 
+ #test2
 # Script:  residencetime.py
 # Purpose: calculate ion pair correlation function
 # Syntax:  python residencetime.py 
